@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Кот Учёный — Улучшенный визуал</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <style>
+        :root {
+            --math-primary: #3B82F6; --math-light: #EFF6FF; --math-gradient: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            --rus-primary: #7C3AED; --rus-light: #F5F3FF; --rus-gradient: linear-gradient(135deg, #7C3AED, #5B21B6);
+            --green: #10B981; --green-light: #D1FAE5; --red: #EF4444; --red-light: #FEE2E2;
+            --orange: #F59E0B; --gold: #FBBF24; --gold-light: #FEF3C7;
+            --bg: #F8FAFC; --card: #FFFFFF; --text: #1E293B; --text-light: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12); --shadow-xl: 0 20px 60px rgba(0,0,0,0.2);
+            --radius-lg: 24px; --radius: 16px; --radius-sm: 12px; --radius-xs: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #E2E8F0 0%, #F1F5F9 100%); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; padding: 12px; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .app { 
+            width: 100%; max-width: 420px; background: var(--bg); 
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); overflow: hidden; 
+            display: flex; flex-direction: column; height: 93vh; max-height: 860px; position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        /* ── Шапка ── */
+        .header { padding: 14px 16px 10px; color: white; z-index: 10; transition: all 0.4s ease; }
+        .header.math-header { background: var(--math-gradient); }
+        .header.rus-header { background: var(--rus-gradient); }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .cat-avatar { 
+            width: 40px; height: 40px; background: rgba(255,255,255,0.2); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; cursor: pointer; border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease; backdrop-filter: blur(4px);
+        }
+        .cat-avatar:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+        .header-app-name { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+        .header-stats { display: flex; gap: 8px; font-size: 12px; font-weight: 700; }
+        .stat { 
+            display: flex; align-items: center; gap: 4px; 
+            background: rgba(255,255,255,0.15); padding: 6px 12px; 
+            border-radius: 20px; backdrop-filter: blur(4px);
+        }
+        .subject-switch { 
+            display: flex; background: rgba(255,255,255,0.2); 
+            border-radius: 14px; padding: 3px; backdrop-filter: blur(4px);
+        }
+        .subject-btn { 
+            flex: 1; padding: 9px 12px; border: none; background: transparent; 
+            border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; 
+            transition: all 0.3s ease; color: rgba(255,255,255,0.8); 
+            font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .subject-btn.active { 
+            background: white; color: var(--text); 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        
+        /* ── Сцена с котом ── */
+        .cat-stage { 
+            padding: 8px 16px 4px; display: flex; flex-direction: column; 
+            align-items: center; min-height: 80px; justify-content: flex-end; 
+            transition: all 0.4s ease;
+        }
+        .cat-stage.math-stage { background: linear-gradient(180deg, #DBEAFE 0%, #F8FAFC 100%); }
+        .cat-stage.rus-stage { background: linear-gradient(180deg, #EDE9FE 0%, #F8FAFC 100%); }
+        .cat-speech-bubble { 
+            background: white; padding: 8px 14px; border-radius: 16px 16px 16px 4px; 
+            box-shadow: var(--shadow-sm); font-size: 12px; font-weight: 600; 
+            color: var(--text); max-width: 220px; text-align: center; margin-bottom: 4px; 
+            animation: floatBubble 3s ease-in-out infinite; transition: all 0.3s ease;
+        }
+        @keyframes floatBubble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        .cat-emoji { 
+            font-size: 44px; cursor: pointer; transition: all 0.3s ease; 
+            line-height: 1; position: relative; 
+        }
+        .cat-emoji:active { transform: scale(0.9); }
+        .cat-emoji.petted { animation: purr 0.6s ease; }
+        @keyframes purr { 
+            0%{transform:translateX(0)} 25%{transform:translateX(-5px) rotate(-3deg)} 
+            50%{transform:translateX(5px) rotate(3deg)} 75%{transform:translateX(-3px)} 
+            100%{transform:translateX(0)} 
+        }
+        .hearts-particle { 
+            position: absolute; font-size: 16px; pointer-events: none; 
+            animation: floatUp 1s ease forwards; opacity: 0; 
+        }
+        @keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-50px) scale(1.8);opacity:0} }
+        
+        /* ── Контент ── */
+        .main-content { flex: 1; overflow-y: auto; padding: 6px 12px 8px; }
+        .main-content::-webkit-scrollbar { width: 0; }
+        .section-title { 
+            font-size: 13px; font-weight: 800; color: var(--text); 
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px; 
+        }
+        
+        /* ── Дерево навыков ── */
+        .skill-path { position: relative; padding-left: 20px; }
+        .skill-node { position: relative; margin-bottom: 4px; }
+        .skill-node::before { 
+            content: ''; position: absolute; left: -14px; top: 0; width: 2px; 
+            height: 100%; background: #E2E8F0; border-radius: 2px; 
+        }
+        .skill-node:first-child::before { top: 50%; height: 50%; }
+        .skill-node:last-child::before { height: 50%; }
+        .skill-node.completed::before { background: var(--green); }
+        .skill-node::after { 
+            content: ''; position: absolute; left: -18px; top: 20px; 
+            width: 9px; height: 9px; border-radius: 50%; background: #E2E8F0; 
+            border: 2px solid #F8FAFC; z-index: 2; transition: all 0.3s ease;
+        }
+        .skill-node.completed::after { background: var(--green); transform: scale(1.2); }
+        .skill-node.current::after { 
+            background: white; border: 2px solid var(--green); 
+            box-shadow: 0 0 0 4px rgba(16,185,129,0.2); animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 4px rgba(16,185,129,0.2)} 50%{box-shadow:0 0 0 8px rgba(16,185,129,0.1)} }
+        .skill-card { 
+            background: white; border-radius: 12px; padding: 10px 12px; 
+            box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.25s ease; 
+            display: flex; align-items: center; gap: 10px; border: 2px solid transparent; 
+        }
+        .skill-card:active { transform: scale(0.97); }
+        .skill-card.locked { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); }
+        .skill-card.current { 
+            border-color: var(--green); 
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1); 
+            animation: glow 2s infinite;
+        }
+        @keyframes glow { 0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,0.1)} 50%{box-shadow:0 0 0 6px rgba(16,185,129,0.05)} }
+        .skill-icon-box { 
+            width: 32px; height: 32px; border-radius: 10px; display: flex; 
+            align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; 
+            transition: all 0.3s ease;
+        }
+        .skill-info { flex: 1; min-width: 0; }
+        .skill-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .skill-progress-text { font-size: 10px; color: var(--text-light); font-weight: 600; }
+        .skill-progress-bar { 
+            height: 4px; background: #F1F5F9; border-radius: 4px; 
+            margin-top: 3px; overflow: hidden; 
+        }
+        .skill-progress-fill { 
+            height: 100%; border-radius: 4px; transition: width 0.5s ease; 
+        }
+        .skill-badge { font-size: 16px; flex-shrink: 0; transition: all 0.3s ease; }
+        
+        /* ── Навигация ── */
+        .bottom-nav { 
+            display: flex; background: white; padding: 6px 4px 10px; 
+            border-top: 1px solid #F1F5F9; gap: 2px; 
+        }
+        .nav-btn { 
+            flex: 1; padding: 6px 2px; border: none; background: transparent; 
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; 
+            gap: 2px; font-family: inherit; color: #94A3B8; font-size: 10px; 
+            font-weight: 700; transition: all 0.2s ease; border-radius: 10px; 
+            position: relative; 
+        }
+        .nav-btn.active { color: var(--math-primary); }
+        .rus-mode .nav-btn.active { color: var(--rus-primary); }
+        .nav-icon { font-size: 20px; transition: transform 0.2s ease; }
+        .nav-btn:active .nav-icon { transform: scale(0.85); }
+        .nav-badge { 
+            position: absolute; top: 0; right: 4px; background: var(--red); 
+            color: white; font-size: 9px; font-weight: 800; min-width: 16px; 
+            height: 16px; border-radius: 8px; display: flex; align-items: center; 
+            justify-content: center; padding: 0 4px; animation: badge-pop 0.3s ease;
+        }
+        @keyframes badge-pop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+        
+        /* ── Тост ── */
+        .toast { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-130px); 
+            background: #1E293B; color: white; padding: 10px 18px; border-radius: 24px; 
+            font-weight: 700; font-size: 13px; z-index: 600; 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; align-items: center; gap: 6px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3); pointer-events: none; 
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        
+        /* ── Ачивка-тост ── */
+        .achievement-toast { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-160px); 
+            background: linear-gradient(135deg, #1E293B, #334155); color: var(--gold); 
+            padding: 14px 22px; border-radius: 20px; font-weight: 800; font-size: 14px; 
+            z-index: 700; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; align-items: center; gap: 10px; 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5); pointer-events: none; 
+            border: 1px solid rgba(251,191,36,0.3); 
+        }
+        .achievement-toast.show { transform: translateX(-50%) translateY(0); }
+        
+        /* ── Панели ── */
+        .panel-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15,23,42,0.6); z-index: 200; display: flex; 
+            align-items: center; justify-content: center; opacity: 0; 
+            pointer-events: none; transition: opacity 0.3s ease; 
+            backdrop-filter: blur(4px); 
+        }
+        .panel-overlay.active { opacity: 1; pointer-events: all; }
+        .panel-card { 
+            background: white; border-radius: 22px; padding: 22px 18px 18px; 
+            width: 90%; max-width: 370px; max-height: 80vh; overflow-y: auto; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        @keyframes popIn { 0%{transform:scale(0.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+        
+        /* ── УРОК ── */
+        .lesson-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15,23,42,0.9); z-index: 300; display: flex; 
+            align-items: center; justify-content: center; opacity: 0; 
+            pointer-events: none; transition: opacity 0.3s ease; 
+        }
+        .lesson-overlay.active { opacity: 1; pointer-events: all; }
+        .lesson-container { 
+            width: 92%; max-width: 390px; max-height: 88vh; 
+            border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; 
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5); 
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .lesson-container.math-lesson { background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); }
+        .lesson-container.rus-lesson { background: linear-gradient(180deg, #1E0A3C 0%, #2D1154 100%); }
+        @keyframes slideUp { 0%{transform:translateY(50px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+        .lesson-header { 
+            padding: 10px 14px; display: flex; align-items: center; 
+            justify-content: space-between; color: white; 
+        }
+        .lesson-header.math-bar { background: rgba(30,41,59,0.8); }
+        .lesson-header.rus-bar { background: rgba(45,17,84,0.8); }
+        .lesson-close { 
+            width: 30px; height: 30px; border-radius: 50%; border: none; 
+            background: rgba(255,255,255,0.1); color: white; cursor: pointer; 
+            font-size: 14px; display: flex; align-items: center; justify-content: center; 
+            transition: background 0.2s; 
+        }
+        .lesson-close:hover { background: rgba(255,255,255,0.2); }
+        .lesson-title { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .lesson-steps { display: flex; gap: 3px; }
+        .lstep-dot { 
+            width: 6px; height: 6px; border-radius: 50%; 
+            background: rgba(255,255,255,0.25); transition: all 0.3s ease; 
+        }
+        .lstep-dot.done { background: var(--green); transform: scale(1.3); }
+        .lstep-dot.current { background: var(--gold); transform: scale(1.6); box-shadow: 0 0 4px var(--gold); }
+        .lstep-dot.wrong { background: var(--red); }
+        .lesson-scene { 
+            flex: 1; padding: 18px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center; 
+            min-height: 230px; overflow-y: auto; color: white; 
+        }
+        
+        /* SVG-визуализации */
+        .visual-svg { margin-bottom: 10px; }
+        
+        .lesson-type-badge { 
+            font-size: 10px; font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 1.5px; padding: 4px 10px; border-radius: 10px; 
+            margin-bottom: 10px; 
+        }
+        .badge-warmup { background: rgba(59,130,246,0.2); color: #93C5FD; }
+        .badge-choice { background: rgba(139,92,246,0.2); color: #C4B5FD; }
+        .badge-pair { background: rgba(245,158,11,0.2); color: #FCD34D; }
+        .badge-trap { background: rgba(239,68,68,0.2); color: #FCA5A5; }
+        .badge-input { background: rgba(236,72,153,0.2); color: #F9A8D4; }
+        .badge-boss { background: rgba(245,158,11,0.3); color: #FDE68A; }
+        .badge-bonus { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+        
+        .lesson-question { 
+            font-size: 15px; font-weight: 700; margin-bottom: 6px; 
+            line-height: 1.5; white-space: pre-line; 
+        }
+        .lesson-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+        .lesson-option { 
+            padding: 14px 12px; border-radius: 14px; 
+            border: 2px solid rgba(255,255,255,0.15); 
+            background: rgba(255,255,255,0.05); color: white; 
+            font-size: 15px; font-weight: 700; cursor: pointer; 
+            transition: all 0.2s ease; font-family: inherit; text-align: center; 
+            position: relative; overflow: hidden;
+        }
+        .lesson-option:hover { 
+            border-color: rgba(255,255,255,0.3); 
+            background: rgba(255,255,255,0.08); 
+        }
+        .lesson-option:active { transform: scale(0.95); }
+        .lesson-option.correct-pick { 
+            border-color: var(--green); 
+            background: rgba(16,185,129,0.25); 
+            animation: correct-burst 0.5s ease; 
+        }
+        @keyframes correct-burst { 
+            0%{transform:scale(1)} 30%{transform:scale(1.08)} 
+            60%{transform:scale(0.96)} 100%{transform:scale(1)} 
+        }
+        .lesson-option.wrong-pick { 
+            border-color: var(--red); 
+            background: rgba(239,68,68,0.2); 
+            animation: shake 0.5s ease; 
+        }
+        @keyframes shake { 
+            0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 
+            40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 
+            80%{transform:translateX(4px)} 
+        }
+        
+        /* Парные задания */
+        .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .pair-left, .pair-right { display: flex; flex-direction: column; gap: 8px; }
+        .pair-item { 
+            padding: 12px; border-radius: 12px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.05); color: white; 
+            font-size: 14px; font-weight: 700; cursor: pointer; 
+            transition: all 0.2s ease; font-family: inherit; text-align: center; 
+        }
+        .pair-item.selected { 
+            border-color: var(--gold); 
+            background: rgba(251,191,36,0.25); 
+            box-shadow: 0 0 10px rgba(251,191,36,0.3); 
+        }
+        .pair-item.matched { 
+            border-color: var(--green); 
+            background: rgba(16,185,129,0.2); 
+            opacity: 0.6; pointer-events: none; 
+        }
+        .pair-item.wrong-flash { 
+            border-color: var(--red); 
+            background: rgba(239,68,68,0.25); 
+            animation: shake 0.5s ease; 
+        }
+        
+        /* Поле ввода */
+        .lesson-input-row { display: flex; gap: 8px; width: 100%; }
+        .lesson-input { 
+            flex: 1; padding: 14px; border-radius: 14px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.08); color: white; 
+            font-size: 18px; text-align: center; font-weight: 700; 
+            outline: none; font-family: inherit; transition: all 0.2s ease; 
+        }
+        .lesson-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(251,191,36,0.2); }
+        .btn-lesson-submit { 
+            padding: 14px 22px; background: var(--gold); color: #0F172A; 
+            border: none; border-radius: 14px; font-weight: 800; font-size: 15px; 
+            cursor: pointer; font-family: inherit; transition: all 0.2s ease; 
+            box-shadow: 0 4px 0 #D97706; 
+        }
+        .btn-lesson-submit:active { transform: translateY(2px); box-shadow: 0 2px 0 #D97706; }
+        
+        .lesson-explanation { 
+            display: none; margin-top: 10px; padding: 10px 14px; 
+            background: rgba(255,255,255,0.06); border-radius: 12px; 
+            font-size: 12px; line-height: 1.6; text-align: left; 
+            border-left: 3px solid var(--gold); 
+            animation: fadeIn 0.4s ease; width: 100%; 
+        }
+        .lesson-explanation.show { display: block; }
+        .lesson-explanation.good { border-left-color: var(--green); background: rgba(16,185,129,0.1); }
+        .lesson-explanation.bad { border-left-color: var(--red); background: rgba(239,68,68,0.1); }
+        @keyframes fadeIn { 0%{opacity:0;transform:translateY(-5px)} 100%{opacity:1;transform:translateY(0)} }
+        
+        .lesson-next { 
+            width: 100%; padding: 14px; color: white; border: none; 
+            font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; 
+            display: none; align-items: center; justify-content: center; gap: 6px; 
+            transition: all 0.2s ease; letter-spacing: 0.5px;
+        }
+        .lesson-next.math-next { background: var(--math-primary); }
+        .lesson-next.rus-next { background: var(--rus-primary); }
+        .lesson-next.show { display: flex; }
+        .lesson-next:active { filter: brightness(0.9); }
+        
+        .lesson-finish { 
+            display: none; flex-direction: column; align-items: center; 
+            padding: 24px; text-align: center; color: white; 
+        }
+        .lesson-finish.show { display: flex; animation: popIn 0.4s ease; }
+        .finish-emoji { font-size: 64px; margin-bottom: 8px; animation: bounce-emoji 0.6s ease; }
+        @keyframes bounce-emoji { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        .finish-stats { display: flex; gap: 20px; margin: 12px 0 16px; }
+        .finish-stat { text-align: center; }
+        .finish-stat-val { font-size: 20px; font-weight: 800; }
+        .finish-stat-label { font-size: 10px; opacity: 0.7; }
+        .btn-lesson-finish { 
+            padding: 12px 36px; border: none; border-radius: 16px; 
+            font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; 
+            color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.2); 
+            transition: all 0.2s ease; 
+        }
+        .btn-lesson-finish.math-finish { background: var(--math-primary); }
+        .btn-lesson-finish.rus-finish { background: var(--rus-primary); }
+        .btn-lesson-finish:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+        
+        /* Босс */
+        .boss-row { 
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px; 
+            flex-wrap: wrap; justify-content: center; 
+        }
+        .boss-label { font-size: 14px; white-space: nowrap; color: white; font-weight: 600; }
+        .boss-input { 
+            width: 80px; padding: 10px; border-radius: 10px; 
+            border: 2px solid rgba(255,255,255,0.25); 
+            background: rgba(255,255,255,0.08); color: white; 
+            font-size: 16px; text-align: center; font-weight: 700; 
+            outline: none; font-family: inherit; transition: all 0.2s ease;
+        }
+        .boss-input:focus { border-color: var(--gold); }
+        
+        /* ── ИСТОРИИ ── */
+        .story-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15,23,42,0.9); z-index: 300; display: flex; 
+            align-items: center; justify-content: center; opacity: 0; 
+            pointer-events: none; transition: opacity 0.3s ease; 
+        }
+        .story-overlay.active { opacity: 1; pointer-events: all; }
+        .story-container { 
+            width: 92%; max-width: 390px; max-height: 88vh; 
+            border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; 
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5); 
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .story-container.math-story { background: #0F172A; }
+        .story-container.rus-story { background: #1E0A3C; }
+        .story-header-bar { 
+            padding: 10px 14px; display: flex; align-items: center; 
+            justify-content: space-between; color: white; 
+        }
+        .story-header-bar.math-bar { background: #1E293B; }
+        .story-header-bar.rus-bar { background: #2D1154; }
+        .story-close-btn { 
+            width: 30px; height: 30px; border-radius: 50%; border: none; 
+            background: rgba(255,255,255,0.1); color: white; cursor: pointer; 
+            font-size: 14px; display: flex; align-items: center; justify-content: center; 
+        }
+        .story-title-header { font-weight: 800; font-size: 13px; }
+        .story-steps { display: flex; gap: 3px; }
+        .step-dot { 
+            width: 6px; height: 6px; border-radius: 50%; 
+            background: rgba(255,255,255,0.25); transition: all 0.3s ease; 
+        }
+        .step-dot.done { background: var(--green); }
+        .step-dot.current { background: var(--gold); transform: scale(1.5); }
+        .story-scene { 
+            flex: 1; padding: 18px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; text-align: center; 
+            min-height: 230px; overflow-y: auto; color: white; 
+        }
+        .scene-emoji { font-size: 56px; margin-bottom: 8px; animation: sceneBounce 2s ease infinite; }
+        @keyframes sceneBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .scene-speaker { color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .scene-text { font-size: 14px; line-height: 1.7; font-weight: 500; opacity: 0.9; }
+        .story-task-box { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 14px; width: 100%; margin-top: 10px; border: 1px solid rgba(255,255,255,0.08); }
+        .task-label { color: #94A3B8; font-size: 11px; margin-bottom: 8px; font-weight: 600; }
+        .task-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .task-option { padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
+        .task-option.correct-pick { border-color: var(--green); background: rgba(16,185,129,0.2); }
+        .task-option.wrong-pick { border-color: var(--red); background: rgba(239,68,68,0.2); animation: shake 0.5s ease; }
+        .task-input-row { display: flex; gap: 6px; }
+        .task-input { flex: 1; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: white; font-size: 16px; text-align: center; font-weight: 700; outline: none; }
+        .btn-submit { padding: 12px 18px; background: var(--gold); color: #0F172A; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; }
+        .story-next-btn, .btn-finish-story { width: 100%; padding: 14px; color: white; border: none; font-size: 14px; font-weight: 800; cursor: pointer; display: none; }
+        .story-next-btn.show, .story-finish.show { display: flex; }
+        
+        /* ЛОВУШКИ, ПРОФИЛЬ — без изменений, только радиусы */
+        .story-card { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; cursor: pointer; margin-bottom: 8px; background: white; border: 2px solid #F1F5F9; box-shadow: var(--shadow-sm); transition: all 0.2s ease; }
+        .story-card:active { transform: scale(0.97); }
+        .story-card-icon { font-size: 36px; }
+        .story-card-name { font-size: 14px; font-weight: 700; }
+        .story-card-desc { font-size: 11px; color: var(--text-light); }
+        .badge-new { background: var(--gold-light); color: #92400E; padding: 4px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .badge-done { background: var(--green-light); color: #065F46; padding: 4px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .trap-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; margin-bottom: 8px; cursor: pointer; background: white; border: 2px solid #F1F5F9; box-shadow: var(--shadow-sm); }
+        .trap-item.danger { border-color: var(--red-light); background: #FFF5F5; }
+        .trap-item.warning { border-color: var(--gold-light); background: #FFFBEB; }
+        .trap-item.defused { opacity: 0.5; background: #F8FAFC; }
+        .profile-header { text-align: center; padding: 18px; border-radius: 18px; margin-bottom: 16px; }
+        .profile-header.math-prof { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); }
+        .profile-header.rus-prof { background: linear-gradient(135deg, #F5F3FF, #EDE9FE); }
+        .ach-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .ach-item { text-align: center; padding: 12px 4px; border-radius: 14px; background: #F8FAFC; transition: all 0.3s ease; }
+        .ach-item.unlocked { background: #FFFBEB; box-shadow: 0 2px 12px rgba(251,191,36,0.15); animation: unlock-pop 0.5s ease; }
+        @keyframes unlock-pop { 0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="header math-header" id="headerBar"><div class="header-top"><div class="header-left"><div class="cat-avatar" id="catAvatar">🐱</div><div class="header-app-name">Кот Учёный</div></div><div class="header-stats"><div class="stat"><span>🔥</span><span id="streakCount">7</span></div><div class="stat"><span>💎</span><span id="gemCount">245</span></div></div></div><div class="subject-switch"><button class="subject-btn active" id="btnMath"><span>🧮</span>Математика</button><button class="subject-btn" id="btnRus"><span>📝</span>Русский</button></div></div>
+        <div class="cat-stage math-stage" id="catStage"><div class="cat-speech-bubble" id="catSpeech">Мур! Красота!</div><div class="cat-emoji" id="catBody">🐱</div></div>
+        <div class="main-content"><div class="section-title"><span>🌳</span>Дерево навыков</div><div id="skillTree"></div></div>
+        <div class="bottom-nav"><button class="nav-btn active" id="navHome"><span class="nav-icon">🏠</span>Главная</button><button class="nav-btn" id="navStories"><span class="nav-icon">📖</span>Истории</button><button class="nav-btn" id="navTraps" style="position:relative;"><span class="nav-icon">🪤</span>Ловушки<span class="nav-badge" id="trapsBadge" style="display:none;">0</span></button><button class="nav-btn" id="navProfile"><span class="nav-icon">👤</span>Профиль</button></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="achievement-toast" id="achToast"><span style="font-size:24px;">🏆</span><span id="achToastText"></span></div>
+    <div class="lesson-overlay" id="lessonOverlay"><div class="lesson-container math-lesson" id="lessonContainer"><div class="lesson-header math-bar" id="lessonHeader"><span class="lesson-title" id="lessonTitle">📚</span><div style="display:flex;align-items:center;gap:6px;"><div class="lesson-steps" id="lessonSteps"></div><button class="lesson-close" id="lessonCloseBtn">✕</button></div></div><div class="lesson-scene" id="lessonScene"></div><button class="lesson-next math-next" id="lessonNextBtn">Далее ▸</button><div class="lesson-finish" id="lessonFinishBlock"><div class="finish-emoji">🎉</div><div class="finish-title" id="lfinishTitle">Урок пройден!</div><div class="finish-xp" id="lfinishXP"></div><div class="finish-subtitle" id="lfinishSubtitle"></div><div class="finish-stats"><div class="finish-stat"><div class="finish-stat-val" style="color:var(--green);" id="lfinishCorrect">0</div><div class="finish-stat-label">Верно</div></div><div class="finish-stat"><div class="finish-stat-val" style="color:var(--red);" id="lfinishWrong">0</div><div class="finish-stat-label">Ошибок</div></div></div><button class="btn-lesson-finish math-finish" id="btnLessonFinish">Завершить</button></div></div></div>
+    <div class="story-overlay" id="storyOverlay"><div class="story-container math-story" id="storyContainer"><div class="story-header-bar math-bar" id="storyHeaderBar"><span class="story-title-header" id="storyTitleHeader">🕵️</span><div style="display:flex;align-items:center;gap:6px;"><div class="story-steps" id="storySteps"></div><button class="story-close-btn" id="storyCloseBtn">✕</button></div></div><div class="story-scene" id="storyScene"></div><button class="story-next-btn math-next" id="storyNextBtn">Далее ▸</button><div class="story-finish" id="storyFinishBlock2"><div class="finish-emoji">🏆</div><div class="finish-title" id="finishTitle"></div><div class="finish-xp" id="finishXP"></div><div class="finish-subtitle" id="finishSubtitle"></div><button class="btn-finish-story math-finish" id="btnFinishStory">Завершить</button></div></div></div>
+    <div class="panel-overlay" id="storyPanel"><div class="panel-card"><div class="panel-title">📖 Истории</div><div class="panel-subtitle" id="storyPanelSubtitle"></div><div id="storyList"></div><button class="panel-close" id="btnStoryPanelClose">Закрыть</button></div></div>
+    <div class="panel-overlay" id="trapsPanel"><div class="panel-card"><div class="panel-title">🪤 Ловушки</div><div class="panel-subtitle" id="trapsSubtitle"></div><div id="trapsList"></div><button class="panel-close" id="btnTrapsPanelClose">Закрыть</button></div></div>
+    <div class="panel-overlay" id="profilePanel"><div class="panel-card"><div id="profileContent"></div><button class="panel-close" id="btnProfilePanelClose">Закрыть</button></div></div>
+    <div class="trap-quiz-overlay" id="trapQuizOverlay"><div class="trap-quiz-card" id="trapQuizCard"></div></div>
+
+    <script>
+        (function() {
+            const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,shuffle=a=>[...a].sort(()=>Math.random()-0.5);
+            const defaultState={
+                subject:'math',streak:7,gems:245,currentStory:null,storyStep:0,storyAnswered:false,
+                storiesCompleted:{math:false,rus1:false,rus2:false},
+                traps:[],totalPets:0,currentLesson:null,lessonStep:0,lessonTasks:[],lessonCorrect:0,lessonWrong:0,lessonSkillId:null,
+                lastWrongTask:null,_bonusAdded:false,_wrongTasks:[],_bonusCorrect:0,
+                achievements:{
+                    detective:{id:'detective',name:'🕵️ Детектив',desc:'Пройти 1 историю',unlocked:!1},
+                    sherlock:{id:'sherlock',name:'🔍 Шерлок',desc:'Пройти 2 истории',unlocked:!1},
+                    holmes:{id:'holmes',name:'🎩 Холмс',desc:'Пройти 3 истории',unlocked:!1},
+                    saper:{id:'saper',name:'🪤 Сапёр',desc:'Обезвредить ловушку',unlocked:!1},
+                    hunter:{id:'hunter',name:'💣 Охотник',desc:'Обезвредить 3',unlocked:!1},
+                    murmur:{id:'murmur',name:'🐱 Мур-мур',desc:'Погладить 10 раз',unlocked:!1},
+                    erudite:{id:'erudite',name:'📚 Эрудит',desc:'Переключить 5 раз',unlocked:!1},
+                    firstBlood:{id:'firstBlood',name:'💎 Первая кровь',desc:'Ошибка → ловушки',unlocked:!1},
+                    student:{id:'student',name:'🎓 Ученик',desc:'Пройти 1 урок',unlocked:!1},
+                    master:{id:'master',name:'🏅 Мастер',desc:'Урок без ошибок',unlocked:!1},
+                },
+                skills:{
+                    math:[
+                        {id:'add',name:'Сложение',icon:'➕',color:'#3B82F6',progress:0,status:'current'},
+                        {id:'sub',name:'Вычитание',icon:'➖',color:'#EF4444',progress:0,status:'locked'},
+                        {id:'mul',name:'Умножение',icon:'✖️',color:'#F59E0B',progress:0,status:'locked'},
+                        {id:'div',name:'Деление',icon:'➗',color:'#8B5CF6',progress:0,status:'locked'},
+                        {id:'eq',name:'Уравнения',icon:'🔎',color:'#EC4899',progress:0,status:'locked'},
+                        {id:'geom',name:'Периметр и площадь',icon:'📏',color:'#14B8A6',progress:0,status:'locked'},
+                        {id:'frac',name:'Дроби',icon:'🍕',color:'#F97316',progress:0,status:'locked'},
+                    ],
+                    russian:[
+                        {id:'zhishi',name:'ЖИ/ШИ, ЧА/ЩА, ЧУ/ЩУ',icon:'✍️',color:'#7C3AED',progress:0,status:'current'},
+                        {id:'soft',name:'Разделительный Ь и Ъ',icon:'🧩',color:'#8B5CF6',progress:0,status:'locked'},
+                        {id:'vowel',name:'Безударные гласные',icon:'🔎',color:'#F59E0B',progress:0,status:'locked'},
+                        {id:'silent',name:'Непроизносимые согласные',icon:'🗣️',color:'#EC4899',progress:0,status:'locked'},
+                        {id:'tsya',name:'-ТСЯ/-ТЬСЯ',icon:'🔄',color:'#14B8A6',progress:0,status:'locked'},
+                        {id:'prepri',name:'ПРЕ/ПРИ',icon:'🎯',color:'#F97316',progress:0,status:'locked'},
+                        {id:'nn',name:'Н и НН',icon:'📋',color:'#EF4444',progress:0,status:'locked'},
+                    ]
+                }
+            };
+            
+            const state = JSON.parse(JSON.stringify(defaultState));
+            
+            function saveState() {
+                const data = {subject:state.subject,skills:state.skills,gems:state.gems,streak:state.streak,storiesCompleted:state.storiesCompleted,traps:state.traps,achievements:state.achievements,totalPets:state.totalPets};
+                localStorage.setItem('kot_ucheniy', JSON.stringify(data));
+            }
+            function loadState() {
+                const saved = localStorage.getItem('kot_ucheniy');
+                if (saved) { try { const data = JSON.parse(saved); if(data.skills) state.skills = data.skills; if(data.gems!==undefined) state.gems = data.gems; if(data.streak!==undefined) state.streak = data.streak; if(data.storiesCompleted) state.storiesCompleted = data.storiesCompleted; if(data.traps) state.traps = data.traps; if(data.achievements) state.achievements = data.achievements; if(data.totalPets!==undefined) state.totalPets = data.totalPets; if(data.subject) state.subject = data.subject; } catch(e){} }
+            }
+
+            function makeWrongs(c,n=3){const w=new Set();while(w.size<n){const x=c+rnd(-8,8);if(x!==c&&x>=0&&!w.has(x))w.add(x);}return[...w];}
+            function choiceT(emoji,badge,bc,q,correct,expl){const o=shuffle([correct,...makeWrongs(correct)]);return{type:'choice',emoji,badge,badgeClass:bc,question:q,options:o,correctIdx:o.indexOf(correct),correctAns:correct,explanation:expl};}
+            function inputT(emoji,badge,bc,q,correct,expl){return{type:'input',emoji,badge,badgeClass:bc,question:q,correctAns:correct,explanation:expl};}
+            function pairT(emoji,badge,bc,q,pairs,expl){return{type:'pair',emoji,badge,badgeClass:bc,question:q,pairs,explanation:expl};}
+
+            function generateLesson(skillId,subject){
+                if(subject==='math'){
+                    if(skillId==='add')return generateAddLesson();
+                    if(skillId==='sub')return generateSubLesson();
+                    if(skillId==='mul')return generateMulLesson();
+                    if(skillId==='div')return generateDivLesson();
+                    if(skillId==='eq')return generateEqLesson();
+                    if(skillId==='geom')return generateGeomLesson();
+                    if(skillId==='frac')return generateFracLesson();
+                    return generateAddLesson();
+                }
+                if(skillId==='zhishi')return generateZhishiLesson();
+                if(skillId==='soft')return generateSoftLesson();
+                if(skillId==='vowel')return generateVowelLesson();
+                if(skillId==='silent')return generateSilentLesson();
+                if(skillId==='tsya')return generateTsyaLesson();
+                if(skillId==='prepri')return generatePrepriLesson();
+                if(skillId==='nn')return generateNNLesson();
+                return generateZhishiLesson();
+            }
+
+            // SVG-иллюстрации
+            function appleSVG(count) { return `<svg width="120" height="60" class="visual-svg"><text x="60" y="40" text-anchor="middle" font-size="30">🍎</text><text x="60" y="55" text-anchor="middle" font-size="12" fill="white" font-weight="700">×${count}</text></svg>`; }
+            function pizzaSVG() { return `<svg width="100" height="100" class="visual-svg"><circle cx="50" cy="50" r="45" fill="#F59E0B" stroke="#D97706" stroke-width="3"/><line x1="50" y1="50" x2="50" y2="5" stroke="#D97706" stroke-width="2"/><line x1="50" y1="50" x2="85" y2="15" stroke="#D97706" stroke-width="2"/><line x1="50" y1="50" x2="15" y2="35" stroke="#D97706" stroke-width="2"/><line x1="50" y1="50" x2="80" y2="75" stroke="#D97706" stroke-width="2"/><circle cx="35" cy="25" r="5" fill="#EF4444"/><circle cx="65" cy="30" r="5" fill="#EF4444"/></svg>`; }
+            function squareSVG(s) { return `<svg width="80" height="80" class="visual-svg"><rect x="5" y="5" width="70" height="70" fill="#3B82F6" stroke="#1D4ED8" stroke-width="3" rx="4"/><text x="40" y="45" text-anchor="middle" font-size="18" fill="white" font-weight="800">${s}</text></svg>`; }
+            function bookSVG(n) { return `<svg width="100" height="60" class="visual-svg"><rect x="5" y="10" width="90" height="40" fill="#8B5CF6" stroke="#6D28D9" stroke-width="2" rx="3"/><text x="50" y="38" text-anchor="middle" font-size="14" fill="white" font-weight="700">📚 ×${n}</text></svg>`; }
+
+            function generateAddLesson(){
+                const t=[],g=()=>[rnd(2,20),rnd(2,20)],add=(a,b)=>a+b;
+                t.push(choiceT('🔥','Разминка','badge-warmup',`${g()[0]} + ${g()[1]} = ?`,add(g()[0],g()[1]),`Складываем числа`));
+                const[a2,b2]=g();t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`Посчитай яблоки!`,visual:appleSVG(a2+b2),options:shuffle([a2+b2,...makeWrongs(a2+b2)]),correctIdx:0,correctAns:a2+b2,explanation:`Всего ${a2+b2} яблок`});
+                t.push(choiceT('🎯','Выбор','badge-choice',`${g()[0]} + ${g()[1]} = ?`,add(g()[0],g()[1]),`Складываем`));
+                const pd=[],ua=new Set();while(pd.length<3){const[a,b]=[rnd(2,15),rnd(2,15)],ans=add(a,b);if(!ua.has(ans)){ua.add(ans);pd.push({left:`${a} + ${b}`,right:`${ans}`,answer:ans});}}
+                t.push(pairT('🔗','Парное','badge-pair','Соедини:',pd,''));
+                const tn=rnd(5,20);t.push(choiceT('⚠️','Ловушка','badge-trap',`${tn} + 0 = ?`,tn,'Число + 0 = число!'));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} + ${g()[1]} = ?`,add(g()[0],g()[1]),`Складываем`));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} + ${g()[1]} = ?`,add(g()[0],g()[1]),`Складываем`));
+                const[c1,c2]=[rnd(10,50),rnd(10,50)];t.push(inputT('⭐','Босс','badge-boss',`У Маши ${c1} руб, у Пети ${c2} руб. Вместе?`,add(c1,c2),`${c1}+${c2}=${add(c1,c2)}`));
+                return t;
+            }
+            function generateSubLesson(){
+                const t=[],g=()=>{const a=rnd(10,40),b=rnd(1,a-1);return[a,b];},sub=(a,b)=>a-b;
+                t.push(choiceT('🔥','Разминка','badge-warmup',`${g()[0]} - ${g()[1]} = ?`,sub(g()[0],g()[1]),`Вычитаем`));
+                const[a2,b2]=g();t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`Было ${a2} яблок, съели ${b2}. Осталось?`,visual:appleSVG(a2-b2),options:shuffle([a2-b2,...makeWrongs(a2-b2)]),correctIdx:0,correctAns:a2-b2,explanation:`Осталось ${a2-b2} яблок`});
+                t.push(choiceT('🎯','Выбор','badge-choice',`${g()[0]} - ${g()[1]} = ?`,sub(g()[0],g()[1]),`Вычитаем`));
+                const pd=[],ua=new Set();while(pd.length<3){const[a,b]=[rnd(10,30),rnd(1,a-1)],ans=sub(a,b);if(!ua.has(ans)){ua.add(ans);pd.push({left:`${a} - ${b}`,right:`${ans}`,answer:ans});}}
+                t.push(pairT('🔗','Парное','badge-pair','Соедини:',pd,''));
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`${rnd(10,30)} - ${rnd(10,30)} = ?`,0,'Одинаковые числа — 0!'));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} - ${g()[1]} = ?`,sub(g()[0],g()[1]),`Вычитаем`));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} - ${g()[1]} = ?`,sub(g()[0],g()[1]),`Вычитаем`));
+                const[tot,sp]=[rnd(30,80),rnd(5,tot-10)];t.push(inputT('⭐','Босс','badge-boss',`Было ${tot} руб, потратили ${sp} руб. Осталось?`,sub(tot,sp),`${tot}-${sp}=${sub(tot,sp)}`));
+                return t;
+            }
+            function generateMulLesson(){
+                const t=[],g=()=>[rnd(2,10),rnd(2,10)],mul=(a,b)=>a*b;
+                t.push(choiceT('🔥','Разминка','badge-warmup',`${g()[0]} × ${g()[1]} = ?`,mul(g()[0],g()[1]),`Умножаем`));
+                const[a2,b2]=g();t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`${a2} группы по ${b2} яблока`,visual:appleSVG(mul(a2,b2)),options:shuffle([mul(a2,b2),...makeWrongs(mul(a2,b2))]),correctIdx:0,correctAns:mul(a2,b2),explanation:`${a2}×${b2}=${mul(a2,b2)}`});
+                t.push(choiceT('🎯','Выбор','badge-choice',`${g()[0]} × ${g()[1]} = ?`,mul(g()[0],g()[1]),`Умножаем`));
+                const pd=[],ua=new Set();while(pd.length<3){const[a,b]=[rnd(2,9),rnd(2,9)],ans=mul(a,b);if(!ua.has(ans)){ua.add(ans);pd.push({left:`${a} × ${b}`,right:`${ans}`,answer:ans});}}
+                t.push(pairT('🔗','Парное','badge-pair','Соедини:',pd,''));
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`${rnd(2,9)} × 0 = ?`,0,'Любое × 0 = 0!'));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} × ${g()[1]} = ?`,mul(g()[0],g()[1]),`Умножаем`));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} × ${g()[1]} = ?`,mul(g()[0],g()[1]),`Умножаем`));
+                const[sh,bs]=[rnd(2,5),rnd(4,10)];t.push(inputT('⭐','Босс','badge-boss',`${sh} полки по ${bs} книг. Всего?`,mul(sh,bs),`${sh}×${bs}=${mul(sh,bs)}`));
+                return t;
+            }
+            function generateDivLesson(){
+                const t=[],g=()=>{const b=rnd(2,9),c=rnd(2,9);return[b*c,b];},div=(a,b)=>a/b;
+                t.push(choiceT('🔥','Разминка','badge-warmup',`${g()[0]} ÷ ${g()[1]} = ?`,div(g()[0],g()[1]),`Делим`));
+                const[a2,b2]=g();t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`${a2} яблок на ${b2} корзины`,visual:appleSVG(div(a2,b2)),options:shuffle([div(a2,b2),...makeWrongs(div(a2,b2))]),correctIdx:0,correctAns:div(a2,b2),explanation:`По ${div(a2,b2)} в каждой`});
+                t.push(choiceT('🎯','Выбор','badge-choice',`${g()[0]} ÷ ${g()[1]} = ?`,div(g()[0],g()[1]),`Делим`));
+                const pd=[],ua=new Set();while(pd.length<3){const b=rnd(2,8),c=rnd(2,8),a=b*c,ans=c;if(!ua.has(ans)){ua.add(ans);pd.push({left:`${a} ÷ ${b}`,right:`${ans}`,answer:ans});}}
+                t.push(pairT('🔗','Парное','badge-pair','Соедини:',pd,''));
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`0 ÷ ${rnd(2,9)} = ?`,0,'0 ÷ число = 0!'));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} ÷ ${g()[1]} = ?`,div(g()[0],g()[1]),`Делим`));
+                t.push(inputT('✏️','Ввод','badge-input',`${g()[0]} ÷ ${g()[1]} = ?`,div(g()[0],g()[1]),`Делим`));
+                const[tot,fr]=[rnd(20,60),rnd(2,6)],ans=Math.floor(tot/fr),rem=tot-ans*fr;
+                t.push(inputT('⭐','Босс','badge-boss',`${tot} конфет на ${fr} друзей. По сколько? (ост.${rem})`,ans,`${tot}÷${fr}=${ans}`));
+                return t;
+            }
+            function generateEqLesson(){
+                const t=[],g=()=>{const x=rnd(2,15),a=rnd(1,10);return[x,a,x+a];};
+                t.push(choiceT('🔥','Разминка','badge-warmup',`x + ${g()[1]} = ${g()[2]}. x = ?`,g()[0],`x = ${g()[2]} - ${g()[1]}`));
+                const[x2,a2,ans2]=g();t.push(choiceT('🎯','Выбор','badge-choice',`x - ${a2} = ${x2}. x = ?`,ans2,`x = ${x2} + ${a2}`));
+                const mx=rnd(2,9),ma=rnd(2,5),mans=mx*ma;t.push(choiceT('🎯','Выбор','badge-choice',`${ma} × x = ${mans}. x = ?`,mx,`x = ${mans} ÷ ${ma}`));
+                const pd=[],ua=new Set();while(pd.length<3){const x=rnd(2,12),a=rnd(1,8);if(!ua.has(x)){ua.add(x);pd.push({left:`x + ${a} = ${x+a}`,right:`x = ${x}`,answer:x});}}
+                t.push(pairT('🔗','Парное','badge-pair','Соедини:',pd,''));
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`x + 0 = ${rnd(5,15)}. x = ?`,rnd(5,15),'x + 0 = x!'));
+                t.push(inputT('✏️','Ввод','badge-input',`x + ${g()[1]} = ${g()[2]}. x = ?`,g()[0],`Решаем`));
+                const x7=rnd(2,10),m7=rnd(2,6);t.push(inputT('✏️','Ввод','badge-input',`${m7} × x = ${x7*m7}. x = ?`,x7,`x = ${x7*m7} ÷ ${m7}`));
+                const[ap,bx]=[rnd(2,6),rnd(2,8)];t.push(inputT('⭐','Босс','badge-boss',`В ${bx} коробках ${ap*bx} яблок. В одной?`,ap,`${ap*bx} ÷ ${bx} = ${ap}`));
+                return t;
+            }
+            function generateGeomLesson(){
+                const t=[],rect=()=>[rnd(2,8),rnd(3,10)],sq=()=>rnd(2,8);
+                t.push(choiceT('🔥','Разминка','badge-warmup',`Прямоугольник ${rect()[0]}×${rect()[1]}. P?`,2*(rect()[0]+rect()[1]),`P=2(a+b)`));
+                const s2=sq();t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`Квадрат со стороной ${s2}. S?`,visual:squareSVG(s2),options:shuffle([s2*s2,...makeWrongs(s2*s2)]),correctIdx:0,correctAns:s2*s2,explanation:`S=${s2}²`});
+                t.push(inputT('✏️','Ввод','badge-input',`Прямоугольник ${rect()[0]}×${rect()[1]}. P?`,2*(rect()[0]+rect()[1]),`P=2(a+b)`));
+                t.push(inputT('✏️','Ввод','badge-input',`Квадрат ${sq()}. S?`,sq()*sq(),`S=a²`));
+                t.push(choiceT('🎯','Выбор','badge-choice',`Прямоугольник ${rect()[0]}×${rect()[1]}. S?`,rect()[0]*rect()[1],`S=a×b`));
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`Квадрат ${sq()}. P?`,4*sq(),`P=4a, не a²!`));
+                t.push(inputT('✏️','Ввод','badge-input',`Прямоугольник ${rect()[0]}×${rect()[1]}. S?`,rect()[0]*rect()[1],`S=a×b`));
+                const[rw,rh]=[rnd(4,10),rnd(3,8)];t.push(inputT('⭐','Босс','badge-boss',`Комната ${rw}×${rh} м. P и S (через запятую)`,`${2*(rw+rh)},${rw*rh}`,`P=${2*(rw+rh)}, S=${rw*rh}`));
+                return t;
+            }
+            function generateFracLesson(){
+                const t=[];
+                t.push(choiceT('🔥','Разминка','badge-warmup',`Какая дробь больше: 1/3 или 2/3?`,'2/3','Больше числитель → больше дробь'));
+                t.push(choiceT('🎯','Выбор','badge-choice',`1/2 от 10?`,5,'10÷2=5'));
+                t.push(choiceT('🎯','Выбор','badge-choice',`Сократи: 2/4`,'1/2','Делим на 2'));
+                t.push(inputT('✏️','Ввод','badge-input',`Сократи: 3/9 (как 1/3)`,'1/3','Делим на 3'));
+                t.push({type:'choice',emoji:'',badge:'Рисунок',badgeClass:'badge-choice',question:`Пицца на 8 частей, съели 3. Осталось?`,visual:pizzaSVG(),options:['5/8','3/8','8/8','2/8'],correctIdx:0,correctAns:'5/8',explanation:'8-3=5 → 5/8'});
+                t.push(choiceT('⚠️','Ловушка','badge-trap',`1/2 + 1/2 = ?`,'1','2/2 = 1! Не 2/4!'));
+                t.push(inputT('✏️','Ввод','badge-input',`1/3 от 12?`,4,'12÷3=4'));
+                t.push(inputT('⭐','Босс','badge-boss',`Торт на 6 частей, 2 съели. Осталось? (как 4/6)`,`4/6`,`6-2=4 → 4/6`));
+                return t;
+            }
+
+            // Русский — оставляем как было, только меняем эмодзи на SVG где нужно
+            function generateZhishiLesson(){
+                const d=[{q:'ж_раф',a:'и',hint:'ЖИ с И',wrong:'ы'},{q:'ш_шка',a:'и',hint:'ШИ с И',wrong:'ы'},{q:'маш_на',a:'и',hint:'ШИ с И',wrong:'ы'},{q:'ч_шка',a:'а',hint:'ЧА с А',wrong:'я'},{q:'щ_вель',a:'а',hint:'ЩА с А',wrong:'я'},{q:'ч_до',a:'у',hint:'ЧУ с У',wrong:'ю'},{q:'щ_ка',a:'у',hint:'ЩУ с У',wrong:'ю'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const opts=shuffle([d.a,d.wrong]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши: «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«ж_раф» — и или ы?',options:['и','ы'],correctIdx:0,correctAns:'и',explanation:'ЖИ с И!'});
+                    else tasks.push({type:'boss_zhishi',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'ж_знь',answer:'и'},{text:'ч_до',answer:'у'},{text:'рощ_',answer:'а'}],explanation:'ЖИ, ЧУ, ЩА'});
+                });
+                return tasks;
+            }
+            function generateSoftLesson(){
+                const d=[{q:'в_юга',a:'ь',hint:'Ь в корне',wrong:'ъ'},{q:'под_езд',a:'ъ',hint:'Ъ после приставки',wrong:'ь'},{q:'сем_я',a:'ь',hint:'Ь в корне',wrong:'ъ'},{q:'об_ём',a:'ъ',hint:'Ъ после приставки',wrong:'ь'},{q:'руч_и',a:'ь',hint:'Ь в корне',wrong:'ъ'},{q:'с_ехал',a:'ъ',hint:'Ъ после приставки',wrong:'ь'},{q:'вороб_и',a:'ь',hint:'Ь в корне',wrong:'ъ'},{q:'об_явление',a:'ъ',hint:'Ъ после приставки',wrong:'ь'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const opts=shuffle([d.a,d.wrong]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши (ь/ъ): «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«под_езд» — ь или ъ?',options:['ъ','ь'],correctIdx:0,correctAns:'ъ',explanation:'После приставки — Ъ!'});
+                    else tasks.push({type:'boss_soft',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'в_юга',answer:'ь'},{text:'под_езд',answer:'ъ'},{text:'об_явление',answer:'ъ'}],explanation:'Ь, Ъ, Ъ'});
+                });
+                return tasks;
+            }
+            function generateVowelLesson(){
+                const d=[{q:'л_сной',a:'е',hint:'лес'},{q:'в_да',a:'о',hint:'воды'},{q:'тр_ва',a:'а',hint:'травка'},{q:'ст_на',a:'е',hint:'стены'},{q:'з_мля',a:'е',hint:'земли'},{q:'м_ря',a:'о',hint:'море'},{q:'г_ра',a:'о',hint:'горы'},{q:'сл_ды',a:'е',hint:'след'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const w=d.a==='е'?'и':(d.a==='о'?'а':'е'),opts=shuffle([d.a,w]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши: «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«л_сной» — е или и?',options:['е','и'],correctIdx:0,correctAns:'е',explanation:'лес → лЕсной'});
+                    else tasks.push({type:'boss_vowel',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'л_сной',answer:'е'},{text:'в_да',answer:'о'},{text:'з_мля',answer:'е'}],explanation:'лЕс, вОды, зЕмли'});
+                });
+                return tasks;
+            }
+            function generateSilentLesson(){
+                const d=[{q:'чес_ный',a:'т',hint:'честь'},{q:'грус_ный',a:'т',hint:'грусть'},{q:'радос_ный',a:'т',hint:'радость'},{q:'звёз_ный',a:'д',hint:'звезда'},{q:'праз_ник',a:'д',hint:'словарное'},{q:'чу_ство',a:'в',hint:'чуВствую'},{q:'лес_ница',a:'т',hint:'лестница'},{q:'со_нце',a:'л',hint:'солнышко'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const wr={т:'д',д:'т',в:'л',л:'в'},w=wr[d.a]||'т',opts=shuffle([d.a,w]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши: «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«чу_ство» — в или л?',options:['в','л'],correctIdx:0,correctAns:'в',explanation:'чуВствую!'});
+                    else tasks.push({type:'boss_silent',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'чес_ный',answer:'т'},{text:'со_нце',answer:'л'},{text:'праз_ник',answer:'д'}],explanation:'чесТь, соЛнышко, празДник'});
+                });
+                return tasks;
+            }
+            function generateTsyaLesson(){
+                const d=[{q:'Он учит_ся',a:'тся',hint:'Что делает?'},{q:'Надо учит_ся',a:'ться',hint:'Что делать?'},{q:'Мне нравит_ся',a:'тся',hint:'Что делает?'},{q:'Это может случит_ся',a:'ться',hint:'Что сделать?'},{q:'Солнце садит_ся',a:'тся',hint:'Что делает?'},{q:'Пора просыпат_ся',a:'ться',hint:'Что делать?'},{q:'Он смеёт_ся',a:'тся',hint:'Что делает?'},{q:'Не надо боят_ся',a:'ться',hint:'Что делать?'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const wa=d.a==='тся'?'ться':'тся',opts=shuffle([d.a,wa]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Напиши: «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«Ему нравит_ся»?',options:['тся','ться'],correctIdx:0,correctAns:'тся',explanation:'Что делает? — ТСЯ!'});
+                    else tasks.push({type:'boss_tsya',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'не ошиба_',answer:'ться'},{text:'труди_',answer:'ться'}],explanation:'Что делать? → ТЬСЯ'});
+                });
+                return tasks;
+            }
+            function generatePrepriLesson(){
+                const d=[{q:'пр_бывать',a:'и',hint:'приближаться'},{q:'пр_мудрый',a:'е',hint:'очень'},{q:'пр_шить',a:'и',hint:'присоединить'},{q:'пр_красный',a:'е',hint:'очень'},{q:'пр_вокзальный',a:'и',hint:'рядом'},{q:'пр_градить',a:'е',hint:'пере-'},{q:'пр_открыть',a:'и',hint:'не полностью'},{q:'пр_увеличить',a:'е',hint:'очень'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const opts=shuffle([d.a,d.a==='и'?'е':'и']),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`Вставь: «${d.q}»`,options:opts,correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши (и/е): «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«пр_дать друга»?',options:['е','и'],correctIdx:0,correctAns:'е',explanation:'ПРЕдать = пере-дать'});
+                    else tasks.push({type:'boss_prepri',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'Пр_мудрый',answer:'е'},{text:'пр_был',answer:'и'},{text:'пр_вокзальный',answer:'и'}],explanation:'ПРЕ, ПРИ, ПРИ'});
+                });
+                return tasks;
+            }
+            function generateNNLesson(){
+                const d=[{q:'кури_ый',a:'н',hint:'-ИН-',wrong:'нн'},{q:'соломе_ый',a:'нн',hint:'-ЕНН-',wrong:'н'},{q:'стекля_ый',a:'нн',hint:'исключение!',wrong:'н'},{q:'ветре_ый',a:'н',hint:'исключение!',wrong:'нн'},{q:'пусты_ый',a:'нн',hint:'стык',wrong:'н'},{q:'кожа_ый',a:'н',hint:'-АН-',wrong:'нн'},{q:'обеде_ый',a:'нн',hint:'-ЕНН-',wrong:'н'},{q:'глиня_ый',a:'н',hint:'-ЯН-',wrong:'нн'}];
+                const sel=shuffle(d).slice(0,8),tasks=[];
+                sel.forEach((d,i)=>{
+                    const opts=shuffle([d.a,d.wrong]),ci=opts.indexOf(d.a);
+                    if(i<4)tasks.push({type:'choice',emoji:'📝',badge:'Выбор',badgeClass:'badge-choice',question:`«${d.q}» — Н или НН?`,options:opts.map(o=>o==='н'?'Н':'НН'),correctIdx:ci,correctAns:d.a,explanation:d.hint});
+                    else if(i<6)tasks.push({type:'input',emoji:'✏️',badge:'Ввод',badgeClass:'badge-input',question:`Впиши (н/нн): «${d.q}»`,correctAns:d.a,explanation:d.hint});
+                    else if(i===6)tasks.push({type:'choice',emoji:'⚠️',badge:'Ловушка',badgeClass:'badge-trap',question:'«ветре_ый» — Н/НН?',options:['Н','НН'],correctIdx:0,correctAns:'н',explanation:'Ветреный — исключение!'});
+                    else tasks.push({type:'boss_nn',emoji:'⭐',badge:'Босс',badgeClass:'badge-boss',question:'Вставь:',words:[{text:'стекля_ый',answer:'нн'},{text:'кожа_ый',answer:'н'},{text:'деревя_ый',answer:'нн'}],explanation:'НН, Н, НН'});
+                });
+                return tasks;
+            }
+
+            function startLesson(skillId){
+                const im=state.subject==='math';
+                state.currentLesson=skillId;state.lessonSkillId=skillId;state.lessonStep=0;
+                state.lessonCorrect=0;state.lessonWrong=0;state.lastWrongTask=null;
+                state._bonusAdded=false;state._wrongTasks=[];state._bonusCorrect=0;
+                state.lessonTasks=generateLesson(skillId,state.subject);
+                const skill=state.skills[state.subject].find(s=>s.id===skillId);
+                $('#lessonTitle').textContent=(im?'🧮 ':'📝 ')+(skill?skill.name:'Урок');
+                $('#lessonContainer').className='lesson-container '+(im?'math-lesson':'rus-lesson');
+                $('#lessonHeader').className='lesson-header '+(im?'math-bar':'rus-bar');
+                $('#lessonNextBtn').className='lesson-next '+(im?'math-next':'rus-next');
+                $('#btnLessonFinish').className='btn-lesson-finish '+(im?'math-finish':'rus-finish');
+                refreshDots();$('#lessonOverlay').classList.add('active');$('#lessonNextBtn').classList.remove('show');$('#lessonFinishBlock').classList.remove('show');$('#lessonScene').style.display='flex';
+                renderLessonStep();
+            }
+            function refreshDots(){$('#lessonSteps').innerHTML=state.lessonTasks.map((_,i)=>`<span class="lstep-dot ${i<state.lessonStep?'done':(i===state.lessonStep?'current':'')}"></span>`).join('');}
+            function closeLesson(){
+                $('#lessonOverlay').classList.remove('active');
+                const skill=state.skills[state.subject].find(s=>s.id===state.lessonSkillId);
+                if(skill&&state.lessonCorrect>0){const ratio=state.lessonCorrect/8;const np=Math.min(100,skill.progress+Math.round(ratio*100));skill.progress=np;if(np>=100){skill.status='completed';unlockNext();}}
+                state.currentLesson=null;renderSkillTree();checkAchs();updateTrapsBadge();saveState();
+            }
+            function unlockNext(){const skills=state.skills[state.subject];const ci=skills.findIndex(s=>s.id===state.lessonSkillId);if(ci>=0&&ci+1<skills.length&&skills[ci+1].status==='locked'){skills[ci+1].status='current';showToast('🔓','Новый навык открыт!');}saveState();}
+            function renderLessonStep(){
+                const task=state.lessonTasks[state.lessonStep];if(!task)return finishLesson();
+                $('#lessonNextBtn').classList.remove('show');$('#lessonFinishBlock').classList.remove('show');$('#lessonScene').style.display='flex';
+                let h='';
+                if(task.visual)h+=task.visual;
+                else if(task.emoji)h+=`<div class="lesson-emoji">${task.emoji}</div>`;
+                if(task.badge)h+=`<div class="lesson-type-badge ${task.badgeClass}">${task.badge}</div>`;
+                h+=`<div class="lesson-question">${task.question}</div>`;
+                if(task.type==='choice')h+=`<div class="lesson-options" id="lopts">${task.options.map((o,i)=>`<button class="lesson-option" data-idx="${i}">${o}</button>`).join('')}</div>`;
+                else if(task.type==='pair'){const ls=shuffle(task.pairs.map((p,i)=>({text:p.left,idx:i}))),rs=shuffle(task.pairs.map((p,i)=>({text:p.right,idx:i})));h+=`<div class="pair-grid"><div class="pair-left" id="pairLeft">${ls.map(l=>`<button class="pair-item" data-pair-idx="${l.idx}" data-side="left">${l.text}</button>`).join('')}</div><div class="pair-right" id="pairRight">${rs.map(r=>`<button class="pair-item" data-pair-idx="${r.idx}" data-side="right">${r.text}</button>`).join('')}</div></div><div style="font-size:11px;opacity:0.5;margin-top:6px;">Нажимай: левый → правый</div>`;}
+                else if(task.type==='input'){const isRus=state.subject==='russian',isTsya=state.lessonSkillId==='tsya',isNN=state.lessonSkillId==='nn';let ph='Число';if(isRus){if(isTsya)ph='тся/ться';else if(isNN)ph='н/нн';else ph='букву';}h+=`<div class="lesson-input-row"><input type="text" class="lesson-input" id="linp" placeholder="${ph}" autocomplete="off"><button class="btn-lesson-submit" id="lsub">✓</button></div>`;}
+                else if(task.type&&task.type.startsWith('boss')){h+=`<div style="display:flex;flex-direction:column;gap:8px;width:100%;">`;task.words.forEach((w,wi)=>{let ph='буква';if(task.type==='boss_prepri')ph='и/е';if(task.type==='boss_tsya')ph='тся/ться';if(task.type==='boss_nn')ph='н/нн';if(task.type==='boss_soft')ph='ь/ъ';h+=`<div class="boss-row"><span class="boss-label">${w.text}</span><input type="text" class="boss-input" id="bossInp${wi}" placeholder="${ph}" autocomplete="off" maxlength="5"></div>`;});h+=`<button class="btn-lesson-submit" id="lsub" style="margin-top:6px;">✓ Проверить</button></div>`;}
+                h+=`<div class="lesson-explanation" id="lexpl"></div>`;$('#lessonScene').innerHTML=h;
+                const expl=$('#lexpl');let answered=!1;
+                if(task.type==='choice'){const opts=$$('#lopts .lesson-option');opts.forEach(o=>o.addEventListener('click',()=>{if(answered)return;answered=!0;opts.forEach(x=>x.style.pointerEvents='none');const idx=parseInt(o.dataset.idx);if(idx===task.correctIdx){o.classList.add('correct-pick');if(task.isBonus)state._bonusCorrect++;else state.lessonCorrect++;if(expl){expl.textContent='✅ '+task.explanation;expl.className='lesson-explanation show good';}}else{o.classList.add('wrong-pick');opts[task.correctIdx].classList.add('correct-pick');if(!task.isBonus){state.lessonWrong++;state._wrongTasks.push(task);}else state._bonusCorrect--;if(expl){expl.textContent='🤔 '+task.explanation;expl.className='lesson-explanation show bad';}if(!task.isBonus)addLessonTrap(task);}updateDots();setTimeout(()=>$('#lessonNextBtn').classList.add('show'),1000);}));}
+                else if(task.type==='pair'){let selL=null,matched=0;const total=task.pairs.length,lb=$$('#pairLeft .pair-item'),rb=$$('#pairRight .pair-item');[...lb,...rb].forEach(btn=>{btn.addEventListener('click',()=>{if(answered)return;const side=btn.dataset.side,pidx=parseInt(btn.dataset.pairIdx);if(side==='left'){lb.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selL={el:btn,idx:pidx};}else{if(!selL)return;if(selL.idx===pidx){selL.el.classList.add('matched');btn.classList.add('matched');matched++;selL=null;lb.forEach(b=>b.classList.remove('selected'));if(matched>=total){answered=!0;if(task.isBonus)state._bonusCorrect++;else state.lessonCorrect++;if(expl){expl.textContent='✅ '+task.explanation;expl.className='lesson-explanation show good';}updateDots();setTimeout(()=>$('#lessonNextBtn').classList.add('show'),1000);}}else{btn.classList.add('wrong-flash');setTimeout(()=>btn.classList.remove('wrong-flash'),500);selL.el.classList.remove('selected');selL=null;if(!task.isBonus){state.lessonWrong++;state._wrongTasks.push(task);addLessonTrap(task);}else state._bonusCorrect--;}}});});}
+                else if(task.type==='input'){const inp=$('#linp'),btn=$('#lsub');const sub=()=>{if(answered)return;const v=inp.value.trim().toLowerCase();if(!v){inp.style.borderColor='var(--red)';inp.style.animation='shake 0.5s ease';setTimeout(()=>{inp.style.animation='';inp.style.borderColor='rgba(255,255,255,0.2)';},500);return;}answered=!0;btn.disabled=!0;inp.disabled=!0;const cs=String(task.correctAns).toLowerCase(),ic=(v===cs)||(cs.includes(',')&&v===cs.replace(/,/g,''));if(ic){inp.style.borderColor='var(--green)';inp.style.background='rgba(16,185,129,0.2)';if(task.isBonus)state._bonusCorrect++;else state.lessonCorrect++;if(expl){expl.textContent='✅ '+task.explanation;expl.className='lesson-explanation show good';}}else{inp.style.borderColor='var(--red)';inp.style.background='rgba(239,68,68,0.15)';if(!task.isBonus){state.lessonWrong++;state._wrongTasks.push(task);}else state._bonusCorrect--;if(expl){expl.textContent='🤔 '+task.explanation+' ✅ '+task.correctAns;expl.className='lesson-explanation show bad';}if(!task.isBonus)addLessonTrap(task);}updateDots();setTimeout(()=>$('#lessonNextBtn').classList.add('show'),1000);};btn.addEventListener('click',sub);inp.addEventListener('keydown',e=>{if(e.key==='Enter')sub();});}
+                else if(task.type&&task.type.startsWith('boss')){const inputs=$$('.boss-input');const btn=$('#lsub');const sub=()=>{if(answered)return;let allOk=true;task.words.forEach((w,wi)=>{const v=inputs[wi].value.trim().toLowerCase();if(v!==w.answer){allOk=false;inputs[wi].style.borderColor='var(--red)';inputs[wi].style.background='rgba(239,68,68,0.15)';}else{inputs[wi].style.borderColor='var(--green)';inputs[wi].style.background='rgba(16,185,129,0.2)';}});if(allOk){if(task.isBonus)state._bonusCorrect++;else state.lessonCorrect++;}else{if(!task.isBonus){state.lessonWrong++;state._wrongTasks.push(task);}else state._bonusCorrect--;}answered=true;btn.disabled=true;inputs.forEach(i=>i.disabled=true);if(expl){expl.textContent=allOk?'✅ '+task.explanation:'🤔 '+task.explanation;expl.className='lesson-explanation show '+(allOk?'good':'bad');}if(!allOk&&!task.isBonus)addLessonTrap(task);updateDots();setTimeout(()=>$('#lessonNextBtn').classList.add('show'),1000);};btn.addEventListener('click',sub);inputs.forEach(inp=>{inp.addEventListener('keydown',e=>{if(e.key==='Enter')sub();});});}
+                $('#lessonScene').scrollTop=0;
+            }
+            function updateDots(){const d=$$('#lessonSteps .lstep-dot');d.forEach((x,i)=>{x.classList.remove('done','current','wrong');if(i<state.lessonStep)x.classList.add('done');else if(i===state.lessonStep)x.classList.add(state.lessonWrong>0?'wrong':'current');});}
+            function addLessonTrap(task){const id='lesson_'+state.lessonSkillId+'_'+Date.now();state.traps.push({id,question:task.question,options:task.options||null,correct:task.correctIdx??null,answer:task.correctAns,explanation:task.explanation,source:'Урок: '+$('#lessonTitle').textContent,defuses:0,nextDate:new Date().toISOString(),isInput:task.type==='input'||(task.type&&task.type.startsWith('boss')),subject:state.subject});unlockAch('firstBlood');saveState();}
+            function nextLessonStep(){state.lessonStep++;if(state.lessonStep>=state.lessonTasks.length){if(!state._bonusAdded&&state._wrongTasks.length>0){state._bonusAdded=true;state._bonusCorrect=0;state._wrongTasks.forEach(wt=>{const bonus={...wt,emoji:'🔄',badge:'Повтор',badgeClass:'badge-bonus',question:wt.question,explanation:'Закрепляем!',isBonus:true};state.lessonTasks.push(bonus);});refreshDots();renderLessonStep();$('#lessonScene').scrollTop=0;return;}finishLesson();}else{renderLessonStep();$('#lessonScene').scrollTop=0;}}
+            function finishLesson(){$('#lessonScene').style.display='none';$('#lessonNextBtn').classList.remove('show');$('#lessonFinishBlock').classList.add('show');const c=state.lessonCorrect,w=state.lessonWrong,bc=state._wrongTasks.length,bcr=state._bonusCorrect||0;$('#lfinishCorrect').textContent=c;$('#lfinishWrong').textContent=w;const xp=c*5+(w===0?25:0)+bcr*3;$('#lfinishXP').textContent='+'+xp+' 💎';if(w===0){$('#lfinishTitle').textContent='Идеально! 🌟';$('#lfinishSubtitle').textContent='Навык пройден!';}else{$('#lfinishTitle').textContent='Урок пройден!';$('#lfinishSubtitle').textContent=`${c}/8 верно. Ошибки → 🪤`;}state.gems+=xp;updateStats();unlockAch('student');if(w===0)unlockAch('master');$$('#lessonSteps .lstep-dot').forEach(d=>{d.classList.add('done');d.classList.remove('current','wrong');});catSpeech.textContent=w===0?'Мур! Идеально! 🌟':'Мур! Ошибки в ловушках 🪤';updateTrapsBadge();saveState();}
+
+            function updateSubjectUI(){const im=state.subject==='math';$('#headerBar').className='header '+(im?'math-header':'rus-header');$('#catStage').className='cat-stage '+(im?'math-stage':'rus-stage');$('#btnMath').classList.toggle('active',im);$('#btnRus').classList.toggle('active',!im);$('#app').className='app'+(im?'':' rus-mode');catSpeech.textContent=im?'Мур! Красота!':'Мур! Великий язык!';catBody.textContent=im?'🐱':'😺';}
+            function updateStats(){$('#gemCount').textContent=state.gems;$('#streakCount').textContent=state.streak;}
+            function showToast(e,m){const t=$('#toast');t.innerHTML=`<span>${e}</span> ${m}`;t.classList.add('show');clearTimeout(t._tid);t._tid=setTimeout(()=>t.classList.remove('show'),2000);}
+            function unlockAch(id){const a=state.achievements[id];if(!a||a.unlocked)return;a.unlocked=!0;$('#achToastText').textContent=a.name+' — '+a.desc;$('#achToast').classList.add('show');state.gems+=15;updateStats();setTimeout(()=>$('#achToast').classList.remove('show'),3000);saveState();}
+            function checkAchs(){const done=(state.storiesCompleted.math?1:0)+(state.storiesCompleted.rus1?1:0)+(state.storiesCompleted.rus2?1:0);if(done>=1)unlockAch('detective');if(done>=2)unlockAch('sherlock');if(done>=3)unlockAch('holmes');const def=state.traps.reduce((s,t)=>s+t.defuses,0);if(def>=1)unlockAch('saper');if(def>=3)unlockAch('hunter');if(state.totalPets>=10)unlockAch('murmur');if(state.traps.length>0)unlockAch('firstBlood');}
+            function renderSkillTree(){const skills=state.skills[state.subject];$('#skillTree').innerHTML='<div class="skill-path">'+skills.map(s=>{const nc=s.status==='completed'?'completed':s.status==='current'?'current':'';const cc=s.status==='locked'?'locked':s.status==='completed'?'completed':'current';const se=s.status==='completed'?'✅':s.status==='current'?'▶️':'🔒';const pt=s.progress===100?'✅':s.progress>0?`${s.progress}%`:'Не начато';return`<div class="skill-node ${nc}"><div class="skill-card ${cc}" data-id="${s.id}" data-status="${s.status}"><div class="skill-icon-box" style="background:${s.color}15;color:${s.color};">${s.icon}</div><div class="skill-info"><div class="skill-name">${s.name}</div><div class="skill-progress-text">${pt}</div><div class="skill-progress-bar"><div class="skill-progress-fill" style="width:${s.progress}%;background:${s.color};"></div></div></div><div class="skill-badge">${se}</div></div></div>`;}).join('')+'</div>';$$('#skillTree .skill-card').forEach(card=>{card.addEventListener('click',()=>{const st=card.dataset.status,id=card.dataset.id;if(st==='locked')showToast('🔒','Пройди предыдущий!');else if(st==='completed')showToast('✅','Уже пройден!');else startLesson(id);});});}
+            function getAvail(){const n=new Date();return state.traps.filter(t=>t.defuses<4&&new Date(t.nextDate)<=n&&t.subject===state.subject);}
+            function getLocked(){const n=new Date();return state.traps.filter(t=>t.defuses<4&&new Date(t.nextDate)>n&&t.subject===state.subject);}
+            function getDefused(){return state.traps.filter(t=>t.defuses>=4&&t.subject===state.subject);}
+            function getInt(d){return[1,3,7,14][d]||14;}
+            function updateTrapsBadge(){const a=getAvail().length;if(a>0){$('#trapsBadge').style.display='flex';$('#trapsBadge').textContent=a;}else{$('#trapsBadge').style.display='none';}}
+            function renderTrapsPanel(){const av=getAvail(),lo=getLocked(),de=getDefused();let h='';if(!av.length&&!lo.length&&!de.length)h='<div style="text-align:center;padding:20px;">🏆<br>Пусто!</div>';else{if(av.length){h+='<p style="font-weight:700;color:var(--red);margin-bottom:6px;">🔴 Ожидают</p>';av.forEach(t=>{h+=`<div class="trap-item danger" data-id="${t.id}"><div class="trap-icon">🪤</div><div class="trap-info"><div class="trap-name">${t.question}</div><div class="trap-source">${t.source} | ${t.defuses}/4</div></div><span class="trap-status status-danger">Ждёт!</span></div>`;});}if(lo.length){h+='<p style="font-weight:700;color:var(--orange);margin:10px 0 6px;">🟡 Пауза</p>';lo.forEach(t=>{const hrs=Math.ceil((new Date(t.nextDate)-new Date())/3600000);h+=`<div class="trap-item warning"><div class="trap-icon">⏳</div><div class="trap-info"><div class="trap-name">${t.question}</div><div class="trap-source">Через ~${hrs}ч | ${t.defuses}/4</div></div><span class="trap-status status-warning">Пауза</span></div>`;});}if(de.length){h+='<p style="font-weight:700;color:var(--green);margin:10px 0 6px;">🟢 Обезврежены</p>';de.forEach(t=>{h+=`<div class="trap-item defused"><div class="trap-icon">✅</div><div class="trap-info"><div class="trap-name">${t.question}</div><div class="trap-source">${t.source}</div></div><span class="trap-status status-defused">Готово</span></div>`;});}}$('#trapsList').innerHTML=h;$('#trapsSubtitle').textContent=av.length?`${av.length} ловушка(и) ждёт!`:'';$$('#trapsList .trap-item.danger').forEach(el=>{el.addEventListener('click',()=>{const t=state.traps.find(x=>x.id===el.dataset.id);if(t)openTrapQuiz(t);});});}
+            function openTrapQuiz(trap){let h=`<div class="trap-quiz-emoji">🪤</div><div class="trap-quiz-title">Обезвреживание ${trap.defuses+1}/4</div><div class="trap-quiz-text">${trap.question}</div>`;if(trap.isInput)h+=`<div class="task-input-row"><input type="text" class="task-input" id="tqInp" placeholder="Ответ" autocomplete="off"><button class="btn-submit" id="tqSub">✓</button></div>`;else h+=`<div class="trap-quiz-options" id="tqOpts">${trap.options.map((o,i)=>`<button class="trap-quiz-option" data-idx="${i}">${o}</button>`).join('')}</div>`;h+=`<div class="trap-quiz-explanation" id="tqExpl"></div><button class="btn-trap-quiz-close" id="tqClose">Закрыть</button>`;$('#trapQuizCard').innerHTML=h;$('#trapQuizOverlay').classList.add('active');const expl=$('#tqExpl');let done=!1;const success=()=>{trap.defuses++;trap.nextDate=new Date(Date.now()+getInt(trap.defuses)*86400000).toISOString();state.gems+=5+trap.defuses*3;updateStats();showToast(trap.defuses>=4?'🏆':'✅',trap.defuses>=4?'Готово!':`+${5+trap.defuses*3} 💎`);checkAchs();updateTrapsBadge();renderTrapsPanel();setTimeout(()=>$('#trapQuizOverlay').classList.remove('active'),600);saveState();};if(trap.isInput){const inp=$('#tqInp'),btn=$('#tqSub');const sub=()=>{if(done)return;done=!0;btn.disabled=!0;inp.disabled=!0;if(inp.value.trim().toLowerCase()===String(trap.answer).toLowerCase()){inp.style.borderColor='var(--green)';inp.style.background='rgba(16,185,129,0.2)';if(expl){expl.textContent='✅ '+trap.explanation;expl.className='trap-quiz-explanation show good';}success();}else{inp.style.borderColor='var(--red)';inp.style.background='rgba(239,68,68,0.15)';if(expl){expl.textContent='🤔 '+trap.explanation;expl.className='trap-quiz-explanation show bad';}}};btn.addEventListener('click',sub);inp.addEventListener('keydown',e=>{if(e.key==='Enter')sub();});}else{const opts=$$('#tqOpts .trap-quiz-option');opts.forEach(o=>o.addEventListener('click',()=>{if(done)return;done=!0;opts.forEach(x=>x.style.pointerEvents='none');const idx=parseInt(o.dataset.idx);if(idx===trap.correct){o.classList.add('correct-pick');if(expl){expl.textContent='✅ '+trap.explanation;expl.className='trap-quiz-explanation show good';}success();}else{o.classList.add('wrong-pick');opts[trap.correct].classList.add('correct-pick');if(expl){expl.textContent='🤔 '+trap.explanation;expl.className='trap-quiz-explanation show bad';}}}));}$('#tqClose').addEventListener('click',()=>{$('#trapQuizOverlay').classList.remove('active');updateTrapsBadge();renderTrapsPanel();});}
+            const storySrc={math:{id:'math',title:'🧮 Дело о пропавшем торте',subj:'math',scenes:[{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Мур! Украли торт!'},{type:'choice',speaker:'Следователь',emoji:'🔍',text:'3 ряда по 8 следов.',question:'3×8=?',options:['18','24','28','32'],correct:1,explanation:'3×8=24 🐾',trapId:'smul'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'24 следа! Трое подозреваемых.'},{type:'input',speaker:'Бухгалтер',emoji:'🧾',text:'Торт 120 монет. Вор оставил половину.',question:'120÷2=?',answer:'60',explanation:'120÷2=60 💰',trapId:'sdiv'},{type:'choice',speaker:'Сорока',emoji:'🦜',text:'4 друга × 2 куска. Торт на 8.',question:'Хватит?',options:['Да','Нет','Ровно 8','Больше'],correct:2,explanation:'4×2=8! 🍰',trapId:'slog'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Енот! Дело закрыто! 🎉'}]},rus1:{id:'rus1',title:'📝 Дело о пропавшей запятой',subj:'russian',scenes:[{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Из газеты исчезли запятые!'},{type:'choice',speaker:'Редактор',emoji:'📰',text:'"Кот пр...бывает".',question:'ПРЕ или ПРИ?',options:['Е','И','Ы','Э'],correct:1,explanation:'ПРИбывает 🚂',trapId:'rpre'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Дальше — ресторан...'},{type:'choice',speaker:'Критик',emoji:'🍽️',text:'"Кури...ый суп".',question:'Н или НН?',options:['Н','НН'],correct:0,explanation:'Одна Н — суффикс -ИН- 🐔',trapId:'rnn'},{type:'choice',speaker:'Секретарша',emoji:'💼',text:'"Казнить нельзя помиловать".',question:'Где запятая?',options:['Казнить, нельзя','Казнить нельзя,','Казнить нельзя помиловать,','Не нужна'],correct:1,explanation:'После «нельзя»! ☠️→😇',trapId:'rcom'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Язык спасён! 🎉📚'}]},rus2:{id:'rus2',title:'📝 Дело о двойных согласных',subj:'russian',scenes:[{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Мур! В библиотеке пропали буквы Н!'},{type:'choice',speaker:'Библиотекарь',emoji:'📚',text:'"Стекля...ый стакан".',question:'Н или НН?',options:['Н','НН'],correct:1,explanation:'СтекляННый — исключение! 🔮',trapId:'rnn2'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Ого! Исключение!'},{type:'choice',speaker:'Писатель',emoji:'✍️',text:'"Ветре...ый день".',question:'Н или НН?',options:['Н','НН'],correct:0,explanation:'ВетреНый — одна Н 🌬️',trapId:'rnn3'},{type:'input',speaker:'Поэт',emoji:'🎭',text:'"Пусты...ый пляж". Впиши: н или нн',question:'Сколько Н?',answer:'нн',explanation:'ПустыННый — стык корня и суффикса 🏖️',trapId:'rnn4'},{type:'dialogue',speaker:'Кот',emoji:'🐱',text:'Все буквы на месте! 🎉'}]}};
+            const storyList={math:[storySrc.math],russian:[storySrc.rus1,storySrc.rus2]};
+            function openStoryPanel(){const im=state.subject==='math';$('#storyPanelSubtitle').textContent=im?'Математические расследования':'Расследования по русскому';const list=storyList[state.subject];$('#storyList').innerHTML=list.map(s=>{const done=state.storiesCompleted[s.id];return`<div class="story-card" data-story="${s.id}"><div class="story-card-icon">${im?'🧮':'📝'}</div><div class="story-card-info"><div class="story-card-name">${s.title}</div><div class="story-card-desc">${s.scenes.filter(x=>x.type!=='dialogue').length} задания</div></div><span class="story-card-badge ${done?'badge-done':'badge-new'}">${done?'✅':'🔄'}</span></div>`;}).join('');$$('#storyList .story-card').forEach(c=>c.addEventListener('click',()=>startStory(c.dataset.story)));$('#storyPanel').classList.add('active');}
+            function startStory(id){const scr=storySrc[Object.keys(storySrc).find(k=>storySrc[k].id===id)];state.currentStory=id;state.storyStep=0;state.storyAnswered=!1;const im=scr.subj==='math';$('#storyContainer').className='story-container '+(im?'math-story':'rus-story');$('#storyHeaderBar').className='story-header-bar '+(im?'math-bar':'rus-bar');$('#storyTitleHeader').textContent=scr.title;$('#storySteps').innerHTML=Array.from({length:scr.scenes.length},(_,i)=>`<span class="step-dot ${i===0?'current':''}"></span>`).join('');$('#storyNextBtn').className='story-next-btn '+(im?'math-next':'rus-next');$('#btnFinishStory').className='btn-finish-story '+(im?'math-finish':'rus-finish');$('#storyOverlay').classList.add('active');$('#storyNextBtn').classList.remove('show');$('#storyFinishBlock2').classList.remove('show');$('#storyScene').style.display='flex';$('#storyPanel').classList.remove('active');renderStoryStep();}
+            function closeStory(){$('#storyOverlay').classList.remove('active');state.currentStory=null;checkAchs();updateTrapsBadge();}
+            function renderStoryStep(){const scr=storySrc[Object.keys(storySrc).find(k=>storySrc[k].id===state.currentStory)];const step=scr.scenes[state.storyStep];if(!step)return finishStory();$('#storyNextBtn').classList.remove('show');$('#storyFinishBlock2').classList.remove('show');$('#storyScene').style.display='flex';state.storyAnswered=!1;let h=`<div class="scene-emoji">${step.emoji}</div><div class="scene-speaker">${step.speaker}</div><div class="scene-text">${step.text}</div>`;if(step.type==='choice')h+=`<div class="story-task-box"><div class="task-label">${step.question}</div><div class="task-options" id="taskOpts">${step.options.map((o,i)=>`<button class="task-option" data-idx="${i}">${o}</button>`).join('')}</div><div class="explanation-box" id="explBox"></div></div>`;else if(step.type==='input')h+=`<div class="story-task-box"><div class="task-label">${step.question}</div><div class="task-input-row"><input type="text" class="task-input" id="taskInp" placeholder="Ответ" autocomplete="off"><button class="btn-submit" id="btnSub">✓</button></div><div class="explanation-box" id="explBox"></div></div>`;else setTimeout(()=>$('#storyNextBtn').classList.add('show'),300);$('#storyScene').innerHTML=h;const expl=$('#explBox');let used=!1;const opts=$$('#taskOpts .task-option');opts.forEach(o=>o.addEventListener('click',()=>{if(state.storyAnswered)return;state.storyAnswered=!0;opts.forEach(x=>x.style.pointerEvents='none');const idx=parseInt(o.dataset.idx);if(idx===step.correct){o.classList.add('correct-pick');if(expl){expl.textContent='✅ '+step.explanation;expl.className='explanation-box show good';}state.gems+=5;updateStats();setTimeout(()=>$('#storyNextBtn').classList.add('show'),1000);}else{o.classList.add('wrong-pick');opts[step.correct].classList.add('correct-pick');if(expl){expl.textContent='🤔 '+step.explanation;expl.className='explanation-box show bad';}if(!used&&step.trapId){addStoryTrap(step,scr.title);used=!0;}showToast('🤔','Ошибка → Ловушки!');setTimeout(()=>$('#storyNextBtn').classList.add('show'),1800);}}));const inp=$('#taskInp'),btn=$('#btnSub');if(inp&&btn){let iut=!1;const sub=()=>{if(state.storyAnswered)return;const v=inp.value.trim();if(!v){inp.style.borderColor='var(--red)';inp.style.animation='shake 0.5s ease';setTimeout(()=>{inp.style.animation='';inp.style.borderColor='rgba(255,255,255,0.2)';},500);return;}state.storyAnswered=!0;btn.disabled=!0;inp.disabled=!0;if(v.toLowerCase()===step.answer.toLowerCase()){inp.style.borderColor='var(--green)';inp.style.background='rgba(16,185,129,0.2)';if(expl){expl.textContent='✅ '+step.explanation;expl.className='explanation-box show good';}state.gems+=5;updateStats();setTimeout(()=>$('#storyNextBtn').classList.add('show'),1000);}else{inp.style.borderColor='var(--red)';inp.style.background='rgba(239,68,68,0.15)';if(expl){expl.textContent='🤔 '+step.explanation;expl.className='explanation-box show bad';}if(!iut&&step.trapId){addStoryTrap(step,scr.title);iut=!0;}showToast('🤔','Ошибка → Ловушки!');setTimeout(()=>$('#storyNextBtn').classList.add('show'),1800);}};btn.addEventListener('click',sub);inp.addEventListener('keydown',e=>{if(e.key==='Enter')sub();});}updateStorySteps();$('#storyScene').scrollTop=0;}
+            function addStoryTrap(step,src){if(!step.trapId)return;if(state.traps.find(t=>t.id===step.trapId))return;state.traps.push({id:step.trapId,question:step.question,options:step.options||null,correct:step.correct??null,answer:step.answer||null,explanation:step.explanation,source:src,defuses:0,nextDate:new Date().toISOString(),isInput:step.type==='input',subject:state.currentStory.startsWith('rus')?'russian':'math'});unlockAch('firstBlood');saveState();}
+            function updateStorySteps(){const dots=$('#storySteps').querySelectorAll('.step-dot');dots.forEach((d,i)=>{d.classList.remove('done','current');if(i<state.storyStep)d.classList.add('done');else if(i===state.storyStep)d.classList.add('current');});}
+            function nextStoryStep(){const scr=storySrc[Object.keys(storySrc).find(k=>storySrc[k].id===state.currentStory)];state.storyStep++;if(state.storyStep>=scr.scenes.length)finishStory();else{renderStoryStep();$('#storyScene').scrollTop=0;}}
+            function finishStory(){$('#storyScene').style.display='none';$('#storyNextBtn').classList.remove('show');$('#storyFinishBlock2').classList.add('show');state.storiesCompleted[state.currentStory]=!0;const scr=storySrc[Object.keys(storySrc).find(k=>storySrc[k].id===state.currentStory)];const im=scr.subj==='math';$('#finishTitle').textContent=im?'Дело раскрыто!':'Язык спасён!';$('#finishXP').textContent=im?'+40 💎':'+50 💎';$('#finishSubtitle').textContent=im?'Торт найден!':'Ты герой! 📚';state.gems+=im?40:50;updateStats();$$('#storySteps .step-dot').forEach(d=>{d.classList.add('done');d.classList.remove('current');});catSpeech.textContent='Мур! Дело раскрыто! 🏆';checkAchs();updateTrapsBadge();saveState();}
+            function renderProfile(){const im=state.subject==='math';const done=(state.storiesCompleted.math?1:0)+(state.storiesCompleted.rus1?1:0)+(state.storiesCompleted.rus2?1:0);const def=state.traps.reduce((s,t)=>s+t.defuses,0);const unl=Object.values(state.achievements).filter(a=>a.unlocked).length;let h=`<div class="profile-header ${im?'math-prof':'rus-prof'}"><div class="profile-cat">${im?'🐱':'😺'}</div><div class="profile-name">Кот Учёный</div><div style="font-size:11px;color:var(--text-light);">${im?'Математик':'Филолог'}</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-val ${im?'math-val':'rus-val'}">${done}</div><div class="profile-stat-label">Историй</div></div><div class="profile-stat"><div class="profile-stat-val ${im?'math-val':'rus-val'}">${def}</div><div class="profile-stat-label">Ловушек</div></div><div class="profile-stat"><div class="profile-stat-val ${im?'math-val':'rus-val'}">${unl}</div><div class="profile-stat-label">Ачивок</div></div></div></div>`;h+='<div style="font-weight:800;color:var(--text);margin-bottom:10px;">🏆 Достижения</div><div class="ach-grid">';Object.values(state.achievements).forEach(a=>{const cls=a.unlocked?'unlocked':'locked';h+=`<div class="ach-item ${cls}"><div class="ach-icon">${a.unlocked?a.name.split(' ')[0]:'🔒'}</div><div class="ach-name">${a.name.split(' ').slice(1).join(' ')}</div><div class="ach-desc">${a.desc}</div></div>`;});h+='</div>';$('#profileContent').innerHTML=h;}
+            const catBody=$('#catBody'),catSpeech=$('#catSpeech');
+            catBody.addEventListener('click',()=>{catBody.classList.add('petted');setTimeout(()=>catBody.classList.remove('petted'),600);state.totalPets++;checkAchs();const p=document.createElement('span');p.className='hearts-particle';p.textContent=['❤️','💕','✨','💖'][Math.floor(Math.random()*4)];p.style.left=(Math.random()*30-10)+'px';p.style.animationDuration=(Math.random()*0.6+0.8)+'s';catBody.appendChild(p);setTimeout(()=>p.remove(),1200);catSpeech.textContent=state.totalPets>=10?'Мур-мур! 💖':'Мррр!';saveState();});
+            $('#btnMath').addEventListener('click',()=>{if(state.subject!=='math'){state.subject='math';updateSubjectUI();renderSkillTree();updateTrapsBadge();saveState();}});
+            $('#btnRus').addEventListener('click',()=>{if(state.subject!=='russian'){state.subject='russian';updateSubjectUI();renderSkillTree();updateTrapsBadge();saveState();}});
+            $('#navHome').addEventListener('click',()=>{$$('.nav-btn').forEach(b=>b.classList.remove('active'));$('#navHome').classList.add('active');});
+            $('#navStories').addEventListener('click',()=>{$$('.nav-btn').forEach(b=>b.classList.remove('active'));$('#navStories').classList.add('active');openStoryPanel();});
+            $('#navTraps').addEventListener('click',()=>{$$('.nav-btn').forEach(b=>b.classList.remove('active'));$('#navTraps').classList.add('active');renderTrapsPanel();$('#trapsPanel').classList.add('active');});
+            $('#navProfile').addEventListener('click',()=>{$$('.nav-btn').forEach(b=>b.classList.remove('active'));$('#navProfile').classList.add('active');renderProfile();$('#profilePanel').classList.add('active');});
+            $('#btnStoryPanelClose').addEventListener('click',()=>$('#storyPanel').classList.remove('active'));
+            $('#btnTrapsPanelClose').addEventListener('click',()=>$('#trapsPanel').classList.remove('active'));
+            $('#btnProfilePanelClose').addEventListener('click',()=>$('#profilePanel').classList.remove('active'));
+            $('#trapQuizOverlay').addEventListener('click',e=>{if(e.target===$('#trapQuizOverlay')){$('#trapQuizOverlay').classList.remove('active');updateTrapsBadge();renderTrapsPanel();}});
+            $('#lessonCloseBtn').addEventListener('click',closeLesson);$('#lessonNextBtn').addEventListener('click',nextLessonStep);$('#btnLessonFinish').addEventListener('click',closeLesson);
+            $('#storyNextBtn').addEventListener('click',nextStoryStep);$('#storyCloseBtn').addEventListener('click',closeStory);$('#btnFinishStory').addEventListener('click',closeStory);
+            
+            loadState();
+            updateSubjectUI();
+            renderSkillTree();
+            updateTrapsBadge();
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+            console.log('🐱 v15 — ВИЗУАЛ УЛУЧШЕН! SVG, анимации, кнопки!');
+        })();
+    </script>
+</body>
+</html>
