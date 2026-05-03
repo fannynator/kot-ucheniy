@@ -8,7 +8,7 @@
   "theme_color": "#3B82F6",
   "icons": [
     {
-      "src": "/kot-ucheniy/icon.svg",
+      "src": "icon.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
